@@ -18,6 +18,7 @@ CREATE TABLE `scrapper_company` (
   `social` varchar(500),
   `description` text,
   PRIMARY KEY (`id`),
+  KEY `idx-site_company_id` (`site_company_id`),
   KEY `idx-name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

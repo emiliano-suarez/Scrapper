@@ -38,10 +38,11 @@
                 $page = json_decode($page);
                 
                 foreach ($page->ids as $companyId) {
-                    $company = $this->getCompanyInfo($companyId);
-                    sleep(2);
+                    if ( ! $this->companyExists($companyId) ) {
+                        $company = $this->getCompanyInfo($companyId);
+                        sleep(2);
+                    }
                 }
-                // $this->_helper->write("test.txt", $page);
                 sleep(3);
             }
         }
@@ -71,7 +72,7 @@
                     $location = $this->getLocation($finder);
                     $domain = $this->getDomain($finder);
                     
-                    $siteCompanyId = $this->_siteName . "_" . $companyId;
+                    $siteCompanyId = $this->generateSiteCompanyId($companyId);
                     $company->setSiteCompanyId($siteCompanyId);
                     $company->setName($name);
                     $company->setLocation($location);
@@ -134,5 +135,17 @@
             $nodes = $finder->query("//*[contains(@class, '$classname')]");
             
             return $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
+        }
+        
+        private function generateSiteCompanyId($companyId)
+        {
+            return $this->_siteName . "_" . $companyId;
+        }
+        
+        private function companyExists($companyId)
+        {
+            $company = new Models\Models_Company();
+            $siteCompanyId = $this->generateSiteCompanyId($companyId);
+            return $company->getBySiteCompanyId($siteCompanyId);
         }
     }

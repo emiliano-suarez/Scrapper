@@ -94,9 +94,14 @@
             return $this->_description;
         }
         
+        public function getBySiteCompanyId($siteCompanyId)
+        {
+            return Da\Da_Company::getBySiteCompanyId($siteCompanyId);
+        }
+        
         public function save()
         {
-            $site_company_id = $this->_siteCompanyId ? $this->_siteCompanyId : "";
+            $siteCompanyId = $this->_siteCompanyId ? $this->_siteCompanyId : "";
             $name = $this->_name ? $this->_name : "";
             $type = $this->_type ? $this->_type : "";
             $markets = $this->_markets ? $this->_markets : "";
@@ -105,7 +110,8 @@
             $social = $this->_social ? $this->_social : "";
             $description = $this->_description ? $this->_description : "";
 
-            $result = Da\Da_Company::save($site_company_id, $name, $type, $markets,
-                                          $location, $domain, $social, $description);
+            $result = Da\Da_Company::save($siteCompanyId, $name, $type,
+                                          $markets, $location, $domain,
+                                          $social, $description);
         }
     }

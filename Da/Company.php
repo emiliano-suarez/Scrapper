@@ -45,4 +45,44 @@
             $value = $dbConnection->execute($sql, $parameters);
             return $value;
         }
+
+        public static function getBySiteCompanyId($siteCompanyId)
+        {
+            $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_READ");
+
+            $sql = "SELECT
+                        id, site_company_id, name, type, markets,
+                        location, domain, social, description
+                    FROM
+                        scrapper_company
+                    WHERE
+                        site_company_id = ? ";
+
+            $parameters = new Da\dbParameters();
+            $parameters->addParameter("STRING", $siteCompanyId);
+
+            $value = $dbConnection->executeQuery($sql, $parameters);
+
+            return $value;
+        }
+
+        public static function getById($id)
+        {
+            $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_READ");
+
+            $sql = "SELECT
+                        id, site_company_id, name, type, markets,
+                        location, domain, social, description
+                    FROM
+                        scrapper_company
+                    WHERE
+                        id = ? ";
+
+            $parameters = new Da\dbParameters();
+            $parameters->addParameter("INT", $id);
+
+            $value = $dbConnection->executeQuery($sql, $parameters);
+
+            return $value;
+        }
     }

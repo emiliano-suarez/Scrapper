@@ -45,18 +45,7 @@
 
                 do {
                     echo "\nPage: " . $pageNumber . "\n";
-/*
-                    $fields = array(
-                            'filter_data[stage][]' => array(
-                                    'Seed',
-                                    'Serie A',
-                                    'Serie B',
-                                    'Serie C',
-                            ),
-                            'sort' => 'signal',
-                            'page' => $pageNumber,
-                    );
-                    */
+
                     $fields = "filter_data[stage][]=Seed&filter_data[stage][]=Series+A&filter_data[stage][]=Series+B&filter_data[stage][]=Series+C";
                     $fields .= "&filter_data[company_types][]=" . $type;
                     $fields .= "&sort=signal&page=" . $pageNumber;
@@ -64,20 +53,23 @@
                     $this->_companyType = "";
 
                     if ($type) {
-                        // $fields['filter_data[company_types][]'] = $type;
                         $this->_companyType = $type;
                     }
 
                     $page = $this->_helper->getPage($url, $fields, $headers);
-                    $page = json_decode($page);
-var_dump($page->ids);
-                    foreach ($page->ids as $companyId) {
-                        if ( ! $this->companyExists($companyId) ) {
-                            $company = $this->getCompanyInfo($companyId);
-                            sleep(2);
+
+                    if ($page) {
+                        $page = json_decode($page);
+
+                        foreach ($page->ids as $companyId) {
+                            if ( ! $this->companyExists($companyId) ) {
+                                $company = $this->getCompanyInfo($companyId);
+                                sleep(2);
+                            }
+                            $companyCounter++;
                         }
-                        $companyCounter++;
                     }
+
                     sleep(2);
 
                     $pageNumber++;
@@ -89,50 +81,50 @@ var_dump($page->ids);
         private function getCompanyInfo($companyId)
         {
             $companyUrl = $this->getCompanyLink($companyId);
-            $company = new Models\Models_Company();
 
             if ($companyUrl) {
                 echo "compannyUrl: " . $companyUrl . "\n";
                 $htmlPage = $this->_helper->getPage($companyUrl);
 
-                $finder = $this->getElementFinder($htmlPage);
+                if ($htmlPage) {
+                    $company = new Models\Models_Company();
 
-                if ($finder) {
-                    $name = $this->getName($finder);
-                    $markets = $this->getMarkets($finder);
-                    $location = $this->getLocation($finder);
-                    $domain = $this->getDomain($finder);
-                    $social = $this->getSocial($finder);
-                    $description = $this->getDescription($finder);
-                    $siteCompanyId = $this->generateSiteCompanyId($companyId);
+                    $finder = $this->getElementFinder($htmlPage);
 
-                    $company->setSiteCompanyId($siteCompanyId);
-                    $company->setName($name);
-                    $company->setType($this->_companyType);
-                    $company->setMarkets($markets);
-                    $company->setLocation($location);
-                    $company->setDomain($domain);
-                    $company->setSocial($social);
-                    $company->setDescription($description);
+                    if ($finder) {
+                        $name = $this->getName($finder);
+                        $markets = $this->getMarkets($finder);
+                        $location = $this->getLocation($finder);
+                        $domain = $this->getDomain($finder);
+                        $social = $this->getSocial($finder);
+                        $description = $this->getDescription($finder);
+                        $siteCompanyId = $this->generateSiteCompanyId($companyId);
 
-                    $scrapperCompanyId = $company->save();
+                        $company->setSiteCompanyId($siteCompanyId);
+                        $company->setName($name);
+                        $company->setType($this->_companyType);
+                        $company->setMarkets($markets);
+                        $company->setLocation($location);
+                        $company->setDomain($domain);
+                        $company->setSocial($social);
+                        $company->setDescription($description);
 
-                    $this->getFounders($scrapperCompanyId);
+                        $scrapperCompanyId = $company->save();
 
-                    if ($this->shouldFetchEmployeesData($description)) {
-                        $this->getEmployees($scrapperCompanyId, $finder);
+                        $this->getFounders($scrapperCompanyId);
+
+                        if ($this->shouldFetchEmployeesData($description)) {
+                            $this->getEmployees($scrapperCompanyId, $finder);
+                        }
+                        echo "Company: " . $name . "\n";
+                        return $company;
                     }
-/*
-                    echo "name: " . $name . "\n";
-                    echo "location: " . $location . "\n";
-                    echo "domain: " . $domain . "\n";
-*/
-                }
-                else {
-                    echo "Fail to get page '$companyUrl'\n";
+                    else {
+                        echo "Fail to get page '$companyUrl'\n";
+                    }
                 }
             }
-            return $company;
+            return false;
         }
 
         private function getElementFinder($htmlPage)
@@ -224,14 +216,19 @@ var_dump($page->ids);
 
             $htmlPage = $this->_helper->getPage($url, $fields, $headers);
 
-            $dom = new \DOMDocument();
-            $dom->loadHTML($htmlPage);
+            if ($htmlPage) {
+                $dom = new \DOMDocument();
+                $dom->loadHTML($htmlPage);
 
-            $finder = new \DomXPath($dom);
-            $classname = "startup-link";
-            $nodes = $finder->query("//*[contains(@class, '$classname')]");
+                $finder = new \DomXPath($dom);
+                $classname = "startup-link";
+                $nodes = $finder->query("//*[contains(@class, '$classname')]");
 
-            return $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
+                return $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
+            }
+            else {
+                return "";
+            }
         }
 
         private function generateSiteCompanyId($companyId)

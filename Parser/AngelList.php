@@ -10,6 +10,16 @@
         private $_config = null;
         private $_helper;
         private $_companyList = array();
+        private $_types = array(
+                              "Startup",
+                              "VC Firm",
+                              "Incubator",
+                              "Early Stage",
+                              "Mobile App",
+                              "Internet",
+                              "", // Needed to do not filter by this field
+                          );
+        private $_companyType = null;
 
         public function __construct($siteName = "")
         {
@@ -27,23 +37,41 @@
             $url = "https://angel.co/company_filters/search_data";
             $headers = array('X-Requested-With: XMLHttpRequest');
             
-            for ($i = 1; $i <= 10; $i++) {
-                echo "\nPage: " . $i . "\n";
-                $fields = array(
-                        'filter_data[stage]' => 'Acquired',
-                        'sort' => 'signal',
-                        'page' => $i,
-                );
-                $page = $this->_helper->getPage($url, $fields, $headers);
-                $page = json_decode($page);
+            foreach ($this->_types as $type) {
+                $companyCounter = 0;
+                $pageNumber = 1;
                 
-                foreach ($page->ids as $companyId) {
-                    if ( ! $this->companyExists($companyId) ) {
-                        $company = $this->getCompanyInfo($companyId);
-                        sleep(2);
+                do {
+                    echo "\nGetting type: " . $type . "\n";
+                    echo "\nPage: " . $pageNumber . "\n";
+                    $fields = array(
+                            'filter_data[stage]' => 'Acquired',
+                            'sort' => 'signal',
+                            'page' => $pageNumber,
+                    );
+                    
+                    $this->_companyType = "";
+                    
+                    if ($type) {
+                        $fields['filter_data[company_types][]'] = $type;
+                        $this->_companyType = $type;
                     }
+                    
+                    $page = $this->_helper->getPage($url, $fields, $headers);
+                    $page = json_decode($page);
+
+                    foreach ($page->ids as $companyId) {
+                        if ( ! $this->companyExists($companyId) ) {
+                            $company = $this->getCompanyInfo($companyId);
+                            sleep(2);
+                        }
+                        $companyCounter++;
+                    }
+                    sleep(3);
+                    
+                    $pageNumber++;
                 }
-                sleep(3);
+                while($companyCounter < $page->total);
             }
         }
         
@@ -75,6 +103,7 @@
                     $siteCompanyId = $this->generateSiteCompanyId($companyId);
                     $company->setSiteCompanyId($siteCompanyId);
                     $company->setName($name);
+                    $company->setType($this->_companyType);
                     $company->setLocation($location);
                     $company->setDomain($domain);
                     $company->save();

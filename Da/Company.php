@@ -43,7 +43,13 @@
             $parameters->addParameter("TEXT", $description);
 
             $value = $dbConnection->execute($sql, $parameters);
-            return $value;
+
+            if ($value) {
+                return $dbConnection->getLastId();
+            }
+            else {
+                return false;
+            }
         }
 
         public static function getBySiteCompanyId($siteCompanyId)

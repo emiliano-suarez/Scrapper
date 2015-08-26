@@ -41,4 +41,3 @@ CREATE TABLE `scrapper_employee` (
   KEY `idx-company_id` (`company_id`),
   KEY `idx-name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-

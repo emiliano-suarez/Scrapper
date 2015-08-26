@@ -40,7 +40,7 @@
             $parameters->addParameter("STRING", $location);
             $parameters->addParameter("STRING", $domain);
             $parameters->addParameter("STRING", $social);
-            $parameters->addParameter("TEXT", $description);
+            $parameters->addParameter("STRING", $description);
 
             $value = $dbConnection->execute($sql, $parameters);
 

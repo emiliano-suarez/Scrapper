@@ -97,15 +97,22 @@
                 
                 if ($finder) {
                     $name = $this->getName($finder);
+                    $markets = $this->getMarkets($finder);
                     $location = $this->getLocation($finder);
                     $domain = $this->getDomain($finder);
-                    
+                    $social = $this->getSocial($finder);
+                    $description = $this->getDescription($finder);
                     $siteCompanyId = $this->generateSiteCompanyId($companyId);
+                    
                     $company->setSiteCompanyId($siteCompanyId);
                     $company->setName($name);
                     $company->setType($this->_companyType);
+                    $company->setMarkets($markets);
                     $company->setLocation($location);
                     $company->setDomain($domain);
+                    $company->setSocial($social);
+                    $company->setDescription($description);
+                    
                     $company->save();
                     
                     echo "name: " . $name . "\n";
@@ -131,10 +138,25 @@
             $classname = "name_holder";
             $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'name')]";
             $nodes = $finder->query($query);
-            $name = split(" · ", $nodes->item(0)->nodeValue)[0];
+            $name = explode(" · ", $nodes->item(0)->nodeValue)[0];
             return $name;
         }
         
+        private function getMarkets($finder)
+        {
+            $classname = "main standard g-lockup larger";
+            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'tag')]";
+            $nodes = $finder->query($query);
+            $marketsArray = explode(" · ", $nodes->item(0)->nodeValue);
+            
+            // Remove the first element because it is the location
+            array_shift($marketsArray);
+            
+            $markets = implode(",", $marketsArray);
+            $markets = preg_replace( "/\n/", "", $markets);
+            return $markets;
+        }
+ 
         private function getLocation($finder)
         {
             $classname = "main standard g-lockup larger";
@@ -152,6 +174,35 @@
             $nodes = $finder->query($query);
             $domain = $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
             return $domain;
+        }
+        
+        private function getSocial($finder)
+        {
+            $classname = "links standard";
+            $query = "//*[contains(@class, '$classname')]//*[(contains(@class, 'link')) and not (contains(@class, 'blank'))]//*[contains(@class, '_url')]";
+            $nodes = $finder->query($query);
+
+            $socialArray = array();
+            for ($i = 0; $i < $nodes->length; $i++) {
+                // Don't concatenate 'company_url'
+                if ("company_url" != $nodes->item($i)->attributes->getNamedItem("class")->nodeValue) {
+                    $socialArray[] = $nodes->item($i)->attributes->getNamedItem("href")->nodeValue;
+                }
+            }
+
+            $social = implode(",", $socialArray);
+            $social = preg_replace( "/\n/", "", $social);
+
+            return $social;
+        }
+        
+        private function getDescription($finder)
+        {
+            $classname = "product_desc editable_region";
+            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'content')]";
+            $nodes = $finder->query($query);
+            $description = $nodes->item(0)->nodeValue;
+            return $description;
         }
         
         private function getCompanyLink($htmlPage)

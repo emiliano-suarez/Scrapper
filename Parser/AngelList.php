@@ -36,16 +36,16 @@
         {
             $url = "https://angel.co/company_filters/search_data";
             $headers = array('X-Requested-With: XMLHttpRequest');
-            
+
             foreach ($this->_types as $type) {
                 $companyCounter = 0;
                 $pageNumber = 1;
-                
+
                 echo "Getting type: " . $type . "\n";
-                
+
                 do {
                     echo "\nPage: " . $pageNumber . "\n";
-                    
+/*
                     $fields = array(
                             'filter_data[stage][]' => array(
                                     'Seed',
@@ -56,19 +56,18 @@
                             'sort' => 'signal',
                             'page' => $pageNumber,
                     );
-                    
+                    */
+                    $fields = "filter_data[stage][]=Seed&filter_data[stage][]=Series+A&filter_data[stage][]=Series+B&filter_data[stage][]=Series+C";
+                    $fields .= "&filter_data[company_types][]=" . $type;
+                    $fields .= "&sort=signal&page=" . $pageNumber;
+
                     $this->_companyType = "";
-                    
+
                     if ($type) {
-                        $fields['filter_data[company_types][]'] = $type;
+                        // $fields['filter_data[company_types][]'] = $type;
                         $this->_companyType = $type;
                     }
-                    
-var_dump($url);
-echo "\n";
-var_dump($fields);
-echo "\n";
-var_dump($headers);
+
                     $page = $this->_helper->getPage($url, $fields, $headers);
                     $page = json_decode($page);
 var_dump($page->ids);
@@ -80,24 +79,24 @@ var_dump($page->ids);
                         $companyCounter++;
                     }
                     sleep(2);
-                    
+
                     $pageNumber++;
                 }
                 while($companyCounter < $page->total);
             }
         }
-        
+
         private function getCompanyInfo($companyId)
         {
             $companyUrl = $this->getCompanyLink($companyId);
             $company = new Models\Models_Company();
-            
+
             if ($companyUrl) {
                 echo "compannyUrl: " . $companyUrl . "\n";
                 $htmlPage = $this->_helper->getPage($companyUrl);
 
                 $finder = $this->getElementFinder($htmlPage);
-                
+
                 if ($finder) {
                     $name = $this->getName($finder);
                     $markets = $this->getMarkets($finder);
@@ -115,11 +114,11 @@ var_dump($page->ids);
                     $company->setDomain($domain);
                     $company->setSocial($social);
                     $company->setDescription($description);
-                    
+
                     $scrapperCompanyId = $company->save();
-                    
+
                     $this->getFounders($scrapperCompanyId);
-                    
+
                     if ($this->shouldFetchEmployeesData($description)) {
                         $this->getEmployees($scrapperCompanyId, $finder);
                     }
@@ -135,7 +134,7 @@ var_dump($page->ids);
             }
             return $company;
         }
-        
+
         private function getElementFinder($htmlPage)
         {
             $dom = new \DOMDocument();
@@ -151,22 +150,22 @@ var_dump($page->ids);
             $name = explode(" · ", $nodes->item(0)->nodeValue)[0];
             return $name;
         }
-        
+
         private function getMarkets($finder)
         {
             $classname = "main standard g-lockup larger";
             $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'tag')]";
             $nodes = $finder->query($query);
             $marketsArray = explode(" · ", $nodes->item(0)->nodeValue);
-            
+
             // Remove the first element because it is the location
             array_shift($marketsArray);
-            
+
             $markets = implode(",", $marketsArray);
             $markets = preg_replace( "/\n/", "", $markets);
             return $markets;
         }
- 
+
         private function getLocation($finder)
         {
             $classname = "main standard g-lockup larger";
@@ -176,7 +175,7 @@ var_dump($page->ids);
             $location = preg_replace( "/\n/", "", $location);
             return $location;
         }
-        
+
         private function getDomain($finder)
         {
             $classname = "links standard";
@@ -185,7 +184,7 @@ var_dump($page->ids);
             $domain = $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
             return $domain;
         }
-        
+
         private function getSocial($finder)
         {
             $classname = "links standard";
@@ -205,7 +204,7 @@ var_dump($page->ids);
 
             return $social;
         }
-        
+
         private function getDescription($finder)
         {
             $classname = "product_desc editable_region";
@@ -214,32 +213,32 @@ var_dump($page->ids);
             $description = $nodes->item(0)->nodeValue;
             return $description;
         }
-        
+
         private function getCompanyLink($companyId)
         {
             echo "\nGetting company info: $companyId\n";
-            
+
             $url = "https://angel.co/follows/tooltip?type=Startup&id=" . $companyId;
             $fields = array();
             $headers = array('X-Requested-With: XMLHttpRequest');
-            
+
             $htmlPage = $this->_helper->getPage($url, $fields, $headers);
-            
+
             $dom = new \DOMDocument();
             $dom->loadHTML($htmlPage);
 
             $finder = new \DomXPath($dom);
             $classname = "startup-link";
             $nodes = $finder->query("//*[contains(@class, '$classname')]");
-            
+
             return $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
         }
-        
+
         private function generateSiteCompanyId($companyId)
         {
             return $this->_siteName . "_" . $companyId;
         }
-        
+
         private function companyExists($companyId)
         {
             $company = new Models\Models_Company();
@@ -255,7 +254,7 @@ var_dump($page->ids);
                 "Communications",
                 "Public Relations",
             );
-            
+
             foreach ($keywords as $keyword) {
                 if (strpos($description, $keyword) !== false) {
                     return true;
@@ -266,9 +265,9 @@ var_dump($page->ids);
 
         private function getFounders($scrapperCompanyId)
         {
-        
+
         }
-        
+
         private function getEmployees($scrapperCompanyId, $finder)
         {
             $classname = "section team";
@@ -279,7 +278,7 @@ var_dump($nodes);
             // $employees = $nodes->item(0)->nodeValue;
 die("..");
            $employees = array();
-            
+
 /*
             $name = $this->getName($finder);
             $markets = $this->getMarkets($finder);
@@ -288,7 +287,7 @@ die("..");
             $social = $this->getSocial($finder);
             $description = $this->getDescription($finder);
             $siteCompanyId = $this->generateSiteCompanyId($companyId);
-            
+
             $company->setSiteCompanyId($siteCompanyId);
             $company->setName($name);
             $company->setType($this->_companyType);
@@ -297,7 +296,7 @@ die("..");
             $company->setDomain($domain);
             $company->setSocial($social);
             $company->setDescription($description);
-            
+
             $scrapperCompanyId = $company->save();
             */
         }

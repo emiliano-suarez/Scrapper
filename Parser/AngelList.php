@@ -41,11 +41,16 @@
                 $companyCounter = 0;
                 $pageNumber = 1;
                 
+                echo "Getting type: " . $type . "\n";
+                
                 do {
-                    echo "\nGetting type: " . $type . "\n";
                     echo "\nPage: " . $pageNumber . "\n";
+                    
                     $fields = array(
-                            'filter_data[stage]' => 'Acquired',
+                            'filter_data[stage][]' => 'Seed',
+                            'filter_data[stage][]' => 'Serie+A',
+                            'filter_data[stage][]' => 'Serie+B',
+                            'filter_data[stage][]' => 'Serie+C',
                             'sort' => 'signal',
                             'page' => $pageNumber,
                     );
@@ -67,7 +72,7 @@
                         }
                         $companyCounter++;
                     }
-                    sleep(3);
+                    sleep(2);
                     
                     $pageNumber++;
                 }

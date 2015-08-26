@@ -25,19 +25,23 @@ CREATE TABLE `scrapper_company` (
 CREATE TABLE `scrapper_founder` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `company_id` int(11) unsigned DEFAULT NULL,
-  `name` varchar(250) DEFAULT NULL,
+  `first_name` varchar(250) DEFAULT NULL,
+  `last_name` varchar(250) DEFAULT NULL,
   `social` varchar(500),
   PRIMARY KEY (`id`),
   KEY `idx-company_id` (`company_id`),
-  KEY `idx-name` (`name`)
+  KEY `idx-first_name` (`first_name`),
+  KEY `idx-last_name` (`last_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `scrapper_employee` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `company_id` int(11) unsigned DEFAULT NULL,
-  `name` varchar(250) DEFAULT NULL,
+  `first_name` varchar(250) DEFAULT NULL,
+  `last_name` varchar(250) DEFAULT NULL,
   `social` varchar(500),
   PRIMARY KEY (`id`),
   KEY `idx-company_id` (`company_id`),
-  KEY `idx-name` (`name`)
+  KEY `idx-first_name` (`first_name`),
+  KEY `idx-last_name` (`last_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

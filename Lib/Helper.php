@@ -15,6 +15,9 @@
             }
             rtrim($fields_string, '&');
 
+echo $fields_string;
+echo "\n";
+die("");
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_HEADER, 0);

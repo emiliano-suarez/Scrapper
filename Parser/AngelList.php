@@ -47,10 +47,12 @@
                     echo "\nPage: " . $pageNumber . "\n";
                     
                     $fields = array(
-                            'filter_data[stage][]' => 'Seed',
-                            'filter_data[stage][]' => 'Serie+A',
-                            'filter_data[stage][]' => 'Serie+B',
-                            'filter_data[stage][]' => 'Serie+C',
+                            'filter_data[stage][]' => array(
+                                    'Seed',
+                                    'Serie A',
+                                    'Serie B',
+                                    'Serie C',
+                            ),
                             'sort' => 'signal',
                             'page' => $pageNumber,
                     );
@@ -62,9 +64,14 @@
                         $this->_companyType = $type;
                     }
                     
+var_dump($url);
+echo "\n";
+var_dump($fields);
+echo "\n";
+var_dump($headers);
                     $page = $this->_helper->getPage($url, $fields, $headers);
                     $page = json_decode($page);
-
+var_dump($page->ids);
                     foreach ($page->ids as $companyId) {
                         if ( ! $this->companyExists($companyId) ) {
                             $company = $this->getCompanyInfo($companyId);
@@ -82,21 +89,12 @@
         
         private function getCompanyInfo($companyId)
         {
-            echo "\nGetting company info: $companyId\n";
-            
-            $url = "https://angel.co/follows/tooltip?type=Startup&id=" . $companyId;
-            $fields = array();
-            $headers = array('X-Requested-With: XMLHttpRequest');
-            
-            $htmlPage = $this->_helper->getPage($url, $fields, $headers);
-            $companyUrl = $this->getCompanyLink($htmlPage);
-            
+            $companyUrl = $this->getCompanyLink($companyId);
             $company = new Models\Models_Company();
             
             if ($companyUrl) {
                 echo "compannyUrl: " . $companyUrl . "\n";
                 $htmlPage = $this->_helper->getPage($companyUrl);
-                // $this->_helper->write($companyId .".html", $htmlPage);
 
                 $finder = $this->getElementFinder($htmlPage);
                 
@@ -108,7 +106,7 @@
                     $social = $this->getSocial($finder);
                     $description = $this->getDescription($finder);
                     $siteCompanyId = $this->generateSiteCompanyId($companyId);
-                    
+
                     $company->setSiteCompanyId($siteCompanyId);
                     $company->setName($name);
                     $company->setType($this->_companyType);
@@ -118,11 +116,18 @@
                     $company->setSocial($social);
                     $company->setDescription($description);
                     
-                    $company->save();
+                    $scrapperCompanyId = $company->save();
                     
+                    $this->getFounders($scrapperCompanyId);
+                    
+                    if ($this->shouldFetchEmployeesData($description)) {
+                        $this->getEmployees($scrapperCompanyId, $finder);
+                    }
+/*
                     echo "name: " . $name . "\n";
                     echo "location: " . $location . "\n";
                     echo "domain: " . $domain . "\n";
+*/
                 }
                 else {
                     echo "Fail to get page '$companyUrl'\n";
@@ -210,8 +215,16 @@
             return $description;
         }
         
-        private function getCompanyLink($htmlPage)
+        private function getCompanyLink($companyId)
         {
+            echo "\nGetting company info: $companyId\n";
+            
+            $url = "https://angel.co/follows/tooltip?type=Startup&id=" . $companyId;
+            $fields = array();
+            $headers = array('X-Requested-With: XMLHttpRequest');
+            
+            $htmlPage = $this->_helper->getPage($url, $fields, $headers);
+            
             $dom = new \DOMDocument();
             $dom->loadHTML($htmlPage);
 
@@ -232,5 +245,60 @@
             $company = new Models\Models_Company();
             $siteCompanyId = $this->generateSiteCompanyId($companyId);
             return $company->getBySiteCompanyId($siteCompanyId);
+        }
+
+        private function shouldFetchEmployeesData($description)
+        {
+            $keywords = array(
+                "Marketing",
+                "PR",
+                "Communications",
+                "Public Relations",
+            );
+            
+            foreach ($keywords as $keyword) {
+                if (strpos($description, $keyword) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private function getFounders($scrapperCompanyId)
+        {
+        
+        }
+        
+        private function getEmployees($scrapperCompanyId, $finder)
+        {
+            $classname = "section team";
+            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'medium roles')]";
+            $nodes = $finder->query($query);
+var_dump($nodes);
+
+            // $employees = $nodes->item(0)->nodeValue;
+die("..");
+           $employees = array();
+            
+/*
+            $name = $this->getName($finder);
+            $markets = $this->getMarkets($finder);
+            $location = $this->getLocation($finder);
+            $domain = $this->getDomain($finder);
+            $social = $this->getSocial($finder);
+            $description = $this->getDescription($finder);
+            $siteCompanyId = $this->generateSiteCompanyId($companyId);
+            
+            $company->setSiteCompanyId($siteCompanyId);
+            $company->setName($name);
+            $company->setType($this->_companyType);
+            $company->setMarkets($markets);
+            $company->setLocation($location);
+            $company->setDomain($domain);
+            $company->setSocial($social);
+            $company->setDescription($description);
+            
+            $scrapperCompanyId = $company->save();
+            */
         }
     }

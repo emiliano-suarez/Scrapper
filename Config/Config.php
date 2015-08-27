@@ -15,7 +15,7 @@
                 'ParserClass' => 'Parser_Common',
                 'setup' => array(
                 ),
-                'enabled' => true,
+                'enabled' => false,
             ),
         ),
     );

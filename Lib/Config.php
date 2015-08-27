@@ -4,26 +4,51 @@
 
     class Lib_Config {
 
-        private $data = null;
+        private $_data = null;
+        private $_sites = array();
 
-        public function __construct()
+        public function __construct($params = array())
         {
             require "Config/Config.php";
-            $this->data = $data;
+            $this->_data = $data;
+
+            if (is_array($params['sites'])) {
+                $this->registerSites($params['sites']);
+            }
+            else {
+                $this->_sites = $this->get('sites');
+            }
         }
 
         public function get($key)
         {
             $elements = split('\.', $key);
-            $value = $this->data;
+            $value = $this->_data;
             foreach ($elements as $element) {
-                $value = $value[$element];
+                if (isset($value[$element])) {
+                    $value = $value[$element];
+                }
+                else {
+                    return false;
+                }
             }
             return $value;
         }
 
         public function getSites()
         {
-            return $this->get('sites');
+            return $this->_sites;
+        }
+
+        private function registerSites($sites = array())
+        {
+            foreach ($sites as $site) {
+                $key = 'sites.' . $site;
+                if ($this->get($key)) {
+                    $this->_sites[$site] = $this->get($key);
+                    // Force 'enabled' property to 'true'
+                    $this->_sites[$site]['enabled'] = true;
+                }
+            }
         }
     }

@@ -6,6 +6,9 @@
 
     class Parser_AngelList implements Parser_Interface {
 
+        const MAX_FOUNDERS = 3;
+        const MAX_EMPLOYEES = 2;
+        
         private $_siteName;
         private $_config = null;
         private $_helper;
@@ -100,6 +103,8 @@
                         $description = $this->getDescription($finder);
                         $siteCompanyId = $this->generateSiteCompanyId($companyId);
 
+                        echo "Company: " . $name . "\n";
+                        
                         $company->setSiteCompanyId($siteCompanyId);
                         $company->setName($name);
                         $company->setType($this->_companyType);
@@ -111,12 +116,12 @@
 
                         $scrapperCompanyId = $company->save();
 
-                        $this->getFounders($scrapperCompanyId);
-
+                        $this->getFounders($scrapperCompanyId, $finder);
+                        
                         if ($this->shouldFetchEmployeesData($description)) {
                             $this->getEmployees($scrapperCompanyId, $finder);
                         }
-                        echo "Company: " . $name . "\n";
+
                         return $company;
                     }
                     else {
@@ -245,56 +250,167 @@
 
         private function shouldFetchEmployeesData($description)
         {
+        return true;
             $keywords = array(
-                "Marketing",
+                "marketing",
                 "PR",
-                "Communications",
-                "Public Relations",
+                "communications",
+                "public relations",
             );
 
             foreach ($keywords as $keyword) {
-                if (strpos($description, $keyword) !== false) {
+                if (strpos(strtolower($description), $keyword) !== false) {
                     return true;
                 }
             }
             return false;
         }
 
-        private function getFounders($scrapperCompanyId)
+        private function getFounders($scrapperCompanyId, $finder)
         {
+            $classname = "founders section";
+            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'larger roles')]";
 
+            $nodeElement = $finder->query($query)->item(0)->getElementsByTagName("a");
+
+            $i = 0;
+            $countFounders = 0;
+            
+            while ( ($i < $nodeElement->length)
+                    && ($countFounders <= $this::MAX_FOUNDERS) ) {
+                $nodeValue = $nodeElement->item($i)->nodeValue;
+                if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
+                    $profileName = $nodeElement->item($i)->nodeValue;
+                    $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
+                    $this->getFounderProfile($profileLink,
+                                             $profileName,
+                                             $scrapperCompanyId);
+
+                    $countFounders++;
+                }
+                $i++;
+            }
         }
-
+        
         private function getEmployees($scrapperCompanyId, $finder)
         {
-            $classname = "section team";
-            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'medium roles')]";
+            $query = "//*[contains(@class, 'section team')]";
+            $query .= "//*[(contains(@class, 'group')) and not (contains(@class, 'view_all'))]";
+            
+            $nodeElement = $finder->query($query)->item(0)->getElementsByTagName("a");
+            
+            $i = 0;
+            $countEmployees = 0;
+            
+            while ( ($i < $nodeElement->length)
+                    && ($countEmployees <= $this::MAX_EMPLOYEES) ) {
+                $nodeValue = $nodeElement->item($i)->nodeValue;
+                if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
+                    $profileName = $nodeElement->item($i)->nodeValue;
+                    $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
+                    $this->getEmployeeProfile($profileLink,
+                                             $profileName,
+                                             $scrapperCompanyId);
+
+                    $countEmployees++;
+                }
+                $i++;
+            }
+        }
+
+        private function getFounderProfile($profileLink,
+                                            $profileName,
+                                            $companyId)
+        {
+            echo "\nFounder Name: " . $profileName . "\n";
+            echo "Founder Link: " . $profileLink . "\n\n";
+            $htmlPage = $this->_helper->getPage($profileLink);
+            
+            if ($htmlPage) {
+                $founder = new Models\Models_Founder();
+                
+                $finder = $this->getElementFinder($htmlPage);
+
+                if ($finder) {
+                    $social = $this->getProfileSocialInfo($finder);
+                    $nameArray = $this->splitProfileName($profileName);
+                    
+                    $founder->setCompanyId($companyId);
+                    $founder->setFirstName($nameArray["first_name"]);
+                    $founder->setLastName($nameArray["last_name"]);
+                    $founder->setSocial($social);
+
+                    $founder->save();
+                }
+            }
+        }
+        
+        private function getEmployeeProfile($profileLink,
+                                            $profileName,
+                                            $companyId)
+        {
+            echo "\nEmployee Name: " . $profileName . "\n";
+            echo "Employee Link: " . $profileLink . "\n\n";
+            $htmlPage = $this->_helper->getPage($profileLink);
+            
+            if ($htmlPage) {
+                $employee = new Models\Models_Employee();
+                
+                $finder = $this->getElementFinder($htmlPage);
+
+                if ($finder) {
+                    $social = $this->getProfileSocialInfo($finder);
+                    $nameArray = $this->splitProfileName($profileName);
+                    
+                    $employee->setCompanyId($companyId);
+                    $employee->setFirstName($nameArray["first_name"]);
+                    $employee->setLastName($nameArray["last_name"]);
+                    $employee->setSocial($social);
+
+                    $employee->save();
+                }
+            }
+        }
+        
+        private function getProfileSocialInfo($finder)
+        {
+            $classname = "darkest";
+            $query = "//*[contains(@class, '$classname')]//*[(contains(@class, 'link'))]";
             $nodes = $finder->query($query);
-var_dump($nodes);
 
-            // $employees = $nodes->item(0)->nodeValue;
-die("..");
-           $employees = array();
+            $socialArray = array();
+            for ($i = 0; $i < $nodes->length; $i++) {
+            
+                if (isset($nodes->item($i)->attributes->getNamedItem("href")->nodeValue)) {
+                    $socialLink = $nodes->item($i)->attributes->getNamedItem("href")->nodeValue;
+                    $socialArray[] = $socialLink;
+                }
+            }
 
-/*
-            $name = $this->getName($finder);
-            $markets = $this->getMarkets($finder);
-            $location = $this->getLocation($finder);
-            $domain = $this->getDomain($finder);
-            $social = $this->getSocial($finder);
-            $description = $this->getDescription($finder);
-            $siteCompanyId = $this->generateSiteCompanyId($companyId);
+            $social = implode(",", $socialArray);
+            $social = preg_replace( "/\n/", "", $social);
+            
+            return $social;
+        }
+        
+        private function splitProfileName($profileName)
+        {
+            $firstName = "";
+            $lastName = "";
+            
+            if ($profileName) {
+                $nameArray = explode(" ", $profileName);
+                $firstName = array_shift($nameArray);
+                if (count($nameArray)) {
+                    $lastName = implode(" ", $nameArray);
+                }
+            }
+            
+            $result = array(
+                        "first_name" => $firstName,
+                        "last_name" => $lastName,
+                      );
 
-            $company->setSiteCompanyId($siteCompanyId);
-            $company->setName($name);
-            $company->setType($this->_companyType);
-            $company->setMarkets($markets);
-            $company->setLocation($location);
-            $company->setDomain($domain);
-            $company->setSocial($social);
-            $company->setDescription($description);
-
-            $scrapperCompanyId = $company->save();
-            */
+            return $result;
         }
     }

@@ -8,23 +8,26 @@
         private static $connections = array();
 
         public static function save($companyId,
-                                    $name,
+                                    $firstName,
+                                    $lastName,
                                     $social)
         {
             $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_WRITE");
 
-            $sql = "INSERT INTO scrapper_employee
+            $sql = "INSERT INTO scrapper_founder
                         (
                             company_id,
-                            name,
+                            first_name,
+                            last_name,
                             social
                         )
                     VALUES
-                        (?, ?, ?);";
+                        (?, ?, ?, ?);";
 
             $parameters = new Da\dbParameters();
-            $parameters->addParameter("INT", $companyIdd);
-            $parameters->addParameter("STRING", $name);
+            $parameters->addParameter("INT", $companyId);
+            $parameters->addParameter("STRING", $firstName);
+            $parameters->addParameter("STRING", $lastName);
             $parameters->addParameter("STRING", $social);
 
             $value = $dbConnection->execute($sql, $parameters);

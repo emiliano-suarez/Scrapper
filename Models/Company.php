@@ -110,8 +110,8 @@
             $social = $this->_social ? $this->_social : "";
             $description = $this->_description ? $this->_description : "";
 
-            $result = Da\Da_Company::save($siteCompanyId, $name, $type,
-                                          $markets, $location, $domain,
-                                          $social, $description);
+            return Da\Da_Company::save($siteCompanyId, $name, $type,
+                                       $markets, $location, $domain,
+                                       $social, $description);
         }
     }

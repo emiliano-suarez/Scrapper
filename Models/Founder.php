@@ -50,6 +50,11 @@
             return $this->_social;
         }
 
+        public function getFoundersByCompanyId($companyId)
+        {
+            return Da\Da_Founder::getFoundersByCompanyId($companyId);
+        }
+
         public function save()
         {
             $companyId = $this->_companyId;

@@ -105,6 +105,7 @@
 
                         echo "Company: " . $name . "\n";
                         
+                        $company->setSiteName($this->_siteName);
                         $company->setSiteCompanyId($siteCompanyId);
                         $company->setName($name);
                         $company->setType($this->_companyType);
@@ -113,7 +114,7 @@
                         $company->setDomain($domain);
                         $company->setSocial($social);
                         $company->setDescription($description);
-
+                        
                         $scrapperCompanyId = $company->save();
 
                         $this->getFounders($scrapperCompanyId, $finder);

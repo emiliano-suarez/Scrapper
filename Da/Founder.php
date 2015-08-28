@@ -33,4 +33,23 @@
             $value = $dbConnection->execute($sql, $parameters);
             return $value;
         }
+
+        public static function getFoundersByCompanyId($companyId)
+        {
+            $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_READ");
+
+            $sql = "SELECT
+                        id, company_id, first_name, last_name, social
+                    FROM
+                        scrapper_founder
+                    WHERE
+                        company_id = ?";
+
+            $parameters = new Da\dbParameters();
+            $parameters->addParameter("INT", $companyId);
+
+            $value = $dbConnection->executeQuery($sql, $parameters);
+
+            return $value;
+        }
     }

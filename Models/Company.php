@@ -4,7 +4,8 @@
     use Scrapper\Da as Da;
 
     class Models_Company {
-    
+
+        private $_siteName;
         private $_siteCompanyId;
         private $_name;
         private $_type;
@@ -13,6 +14,16 @@
         private $_domain;
         private $_social;
         private $_description;
+
+        public function setSiteName($siteName)
+        {
+            $this->_siteName = $siteName;
+        }
+        
+        public function getSiteName()
+        {
+            return $this->_siteName;
+        }
 
         public function setSiteCompanyId($siteCompanyId)
         {
@@ -98,9 +109,15 @@
         {
             return Da\Da_Company::getBySiteCompanyId($siteCompanyId);
         }
+
+        public function getBySiteName($siteName)
+        {
+            return Da\Da_Company::getBySiteName($siteName);
+        }
         
         public function save()
         {
+            $siteName = $this->_siteName ? $this->_siteName : "";
             $siteCompanyId = $this->_siteCompanyId ? $this->_siteCompanyId : "";
             $name = $this->_name ? $this->_name : "";
             $type = $this->_type ? $this->_type : "";
@@ -110,8 +127,8 @@
             $social = $this->_social ? $this->_social : "";
             $description = $this->_description ? $this->_description : "";
 
-            return Da\Da_Company::save($siteCompanyId, $name, $type,
-                                       $markets, $location, $domain,
-                                       $social, $description);
+            return Da\Da_Company::save($siteName, $siteCompanyId, $name,
+                                       $type, $markets, $location,
+                                       $domain, $social, $description);
         }
     }

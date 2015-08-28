@@ -67,7 +67,7 @@
 
         public function write($filename, $txt)
         {
-            $file = fopen($filename, "w") or die("Unable to open file!");
+            $file = fopen($filename, "a+") or die("Unable to open file!");
             fwrite($file, $txt);
             fclose($file);
         }

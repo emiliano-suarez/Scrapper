@@ -50,6 +50,11 @@
             return $this->_social;
         }
 
+        public function getEmployeesByCompanyId($companyId)
+        {
+            return Da\Da_Employee::getEmployeesByCompanyId($companyId);
+        }
+
         public function save()
         {
             $companyId = $this->_companyId;

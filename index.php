@@ -8,12 +8,20 @@
     $params = array();
 
     // Check if there are Sites sent by param
-    $options = getopt("s:");
-    if (isset($options["s"])) {
-        $sitesArray = explode(',', $options["s"]);
-        $params['sites'] = $sitesArray;
-    }
+    $options = getopt("s:f:");
 
-    $config = new Lib\Lib_Config($params);
-    $scrapper = new Controllers\Controllers_Scrapper($config);
-    $scrapper->run();
+    if (isset($options["f"])) {
+        // Generate a CSV file
+        $siteName = $options["f"];
+        $csv = new Lib\Lib_Csv($siteName);
+        $csv->generate();
+    }
+    else {
+        if (isset($options["s"])) {
+            $sitesArray = explode(',', $options["s"]);
+            $params['sites'] = $sitesArray;
+        }
+        $config = new Lib\Lib_Config($params);
+        $scrapper = new Controllers\Controllers_Scrapper($config);
+        $scrapper->run();
+    }

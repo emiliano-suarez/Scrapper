@@ -9,6 +9,7 @@ USE scrapper;
 
 CREATE TABLE `scrapper_company` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `site_name` varchar(50) DEFAULT NULL,
   `site_company_id` varchar(20) DEFAULT NULL,
   `name` varchar(250) DEFAULT NULL,
   `type` varchar(250) DEFAULT NULL,
@@ -18,7 +19,7 @@ CREATE TABLE `scrapper_company` (
   `social` varchar(500),
   `description` text,
   PRIMARY KEY (`id`),
-  KEY `idx-site_company_id` (`site_company_id`),
+  KEY `idx-site_name` (`site_name`),
   KEY `idx-name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

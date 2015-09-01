@@ -47,11 +47,14 @@
             $headers = array('X-Requested-With: XMLHttpRequest');
 
             foreach ($this->_types as $type) {
-                $companyCounter = 0;
-                $pageNumber = 1;
-
                 echo "Getting type: " . $type . "\n";
+                
                 foreach ($this->_stages as $stage) {
+                    echo "Getting stage: " . $stage . "\n";
+
+                    $companyCounter = 0;
+                    $pageNumber = 1;
+                
                     do {
                         echo "\nPage: " . $pageNumber . "\n";
 
@@ -69,21 +72,25 @@
 
                         if ($page) {
                             $page = json_decode($page);
-
-                            foreach ($page->ids as $companyId) {
-                                if ( ! $this->companyExists($companyId) ) {
-                                    $company = $this->getCompanyInfo($companyId);
-                                    sleep(2);
+                            
+                            if (isset($page->ids)) {
+                                foreach ($page->ids as $companyId) {
+                                    if ( ! $this->companyExists($companyId) ) {
+                                        $company = $this->getCompanyInfo($companyId);
+                                        sleep(2);
+                                    }
+                                    $companyCounter++;
                                 }
-                                $companyCounter++;
+                            }
+                            else {
+                                echo "Warning: empty ids !!!\n";
                             }
                         }
-
                         sleep(2);
 
                         $pageNumber++;
                     }
-                    while($companyCounter < $page->total);
+                    while(isset($page->total) && $companyCounter < $page->total);
                 }
             }
         }

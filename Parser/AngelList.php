@@ -13,6 +13,12 @@
         private $_config = null;
         private $_helper;
         private $_companyList = array();
+        private $_stages = array(
+                               "Seed",
+                               "Series+A",
+                               "Series+B",
+                               "Series+C",
+                           );
         private $_types = array(
                               "Startup",
                               "VC Firm",
@@ -45,39 +51,40 @@
                 $pageNumber = 1;
 
                 echo "Getting type: " . $type . "\n";
+                foreach ($this->_stages as $stage) {
+                    do {
+                        echo "\nPage: " . $pageNumber . "\n";
 
-                do {
-                    echo "\nPage: " . $pageNumber . "\n";
+                        $fields = "filter_data[stage]=" . $stage;
+                        $fields .= "&filter_data[company_types][]=" . $type;
+                        $fields .= "&sort=joined&page=" . $pageNumber;
 
-                    $fields = "filter_data[stage][]=Seed&filter_data[stage][]=Series+A&filter_data[stage][]=Series+B&filter_data[stage][]=Series+C";
-                    $fields .= "&filter_data[company_types][]=" . $type;
-                    $fields .= "&sort=joined&page=" . $pageNumber;
+                        $this->_companyType = "";
 
-                    $this->_companyType = "";
-
-                    if ($type) {
-                        $this->_companyType = $type;
-                    }
-
-                    $page = $this->_helper->getPage($url, $fields, $headers);
-
-                    if ($page) {
-                        $page = json_decode($page);
-
-                        foreach ($page->ids as $companyId) {
-                            if ( ! $this->companyExists($companyId) ) {
-                                $company = $this->getCompanyInfo($companyId);
-                                sleep(2);
-                            }
-                            $companyCounter++;
+                        if ($type) {
+                            $this->_companyType = $type;
                         }
+
+                        $page = $this->_helper->getPage($url, $fields, $headers);
+
+                        if ($page) {
+                            $page = json_decode($page);
+
+                            foreach ($page->ids as $companyId) {
+                                if ( ! $this->companyExists($companyId) ) {
+                                    $company = $this->getCompanyInfo($companyId);
+                                    sleep(2);
+                                }
+                                $companyCounter++;
+                            }
+                        }
+
+                        sleep(2);
+
+                        $pageNumber++;
                     }
-
-                    sleep(2);
-
-                    $pageNumber++;
+                    while($companyCounter < $page->total);
                 }
-                while($companyCounter < $page->total);
             }
         }
 

@@ -272,24 +272,28 @@
             $classname = "founders section";
             $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'larger roles')]";
 
-            $nodeElement = $finder->query($query)->item(0)->getElementsByTagName("a");
-
-            $i = 0;
-            $countFounders = 0;
+            $nodeElements = $finder->query($query);
             
-            while ( ($i < $nodeElement->length)
-                    && ($countFounders <= $this::MAX_FOUNDERS) ) {
-                $nodeValue = $nodeElement->item($i)->nodeValue;
-                if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
-                    $profileName = $nodeElement->item($i)->nodeValue;
-                    $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
-                    $this->getFounderProfile($profileLink,
-                                             $profileName,
-                                             $scrapperCompanyId);
+            if ($nodeElements->length > 0) {
+              $nodeElement = $nodeElements->item(0)->getElementsByTagName("a");
 
-                    $countFounders++;
-                }
-                $i++;
+              $i = 0;
+              $countFounders = 0;
+              
+              while ( ($i < $nodeElement->length)
+                      && ($countFounders <= $this::MAX_FOUNDERS) ) {
+                  $nodeValue = $nodeElement->item($i)->nodeValue;
+                  if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
+                      $profileName = $nodeElement->item($i)->nodeValue;
+                      $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
+                      $this->getFounderProfile($profileLink,
+                                              $profileName,
+                                              $scrapperCompanyId);
+
+                      $countFounders++;
+                  }
+                  $i++;
+              }
             }
         }
         
@@ -298,24 +302,28 @@
             $query = "//*[contains(@class, 'section team')]";
             $query .= "//*[(contains(@class, 'group')) and not (contains(@class, 'view_all'))]";
             
-            $nodeElement = $finder->query($query)->item(0)->getElementsByTagName("a");
+            $nodeElements = $finder->query($query);
             
-            $i = 0;
-            $countEmployees = 0;
+            if ($nodeElements->length > 0) {
+              $nodeElement = $nodeElements->item(0)->getElementsByTagName("a");
             
-            while ( ($i < $nodeElement->length)
-                    && ($countEmployees <= $this::MAX_EMPLOYEES) ) {
-                $nodeValue = $nodeElement->item($i)->nodeValue;
-                if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
-                    $profileName = $nodeElement->item($i)->nodeValue;
-                    $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
-                    $this->getEmployeeProfile($profileLink,
-                                             $profileName,
-                                             $scrapperCompanyId);
+              $i = 0;
+              $countEmployees = 0;
+              
+              while ( ($i < $nodeElement->length)
+                      && ($countEmployees <= $this::MAX_EMPLOYEES) ) {
+                  $nodeValue = $nodeElement->item($i)->nodeValue;
+                  if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
+                      $profileName = $nodeElement->item($i)->nodeValue;
+                      $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
+                      $this->getEmployeeProfile($profileLink,
+                                              $profileName,
+                                              $scrapperCompanyId);
 
-                    $countEmployees++;
-                }
-                $i++;
+                      $countEmployees++;
+                  }
+                  $i++;
+              }
             }
         }
 

@@ -51,7 +51,7 @@
 
                     $fields = "filter_data[stage][]=Seed&filter_data[stage][]=Series+A&filter_data[stage][]=Series+B&filter_data[stage][]=Series+C";
                     $fields .= "&filter_data[company_types][]=" . $type;
-                    $fields .= "&sort=signal&page=" . $pageNumber;
+                    $fields .= "&sort=joined&page=" . $pageNumber;
 
                     $this->_companyType = "";
 

@@ -46,3 +46,5 @@ CREATE TABLE `scrapper_employee` (
   KEY `idx-first_name` (`first_name`),
   KEY `idx-last_name` (`last_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE scrapper_company ADD COLUMN processed tinyint(1) DEFAULT 0;

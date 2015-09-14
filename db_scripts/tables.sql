@@ -48,3 +48,4 @@ CREATE TABLE `scrapper_employee` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE scrapper_company ADD COLUMN processed tinyint(1) DEFAULT 0;
+ALTER TABLE scrapper_employee ADD COLUMN `title` VARCHAR(255) DEFAULT 'Employee';

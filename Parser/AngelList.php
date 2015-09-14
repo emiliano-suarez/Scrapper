@@ -133,9 +133,8 @@
 
                         $this->getFounders($scrapperCompanyId, $finder);
                         
-                        if ($this->shouldFetchEmployeesData($description)) {
-                            $this->getEmployees($scrapperCompanyId, $finder);
-                        }
+                        $this->getEmployees($scrapperCompanyId, 'employees_section', $finder);
+                        $this->getEmployees($scrapperCompanyId, 'advisors_section', $finder);
 
                         return $company;
                     }
@@ -263,9 +262,8 @@
             return $company->getBySiteCompanyId($siteCompanyId);
         }
 
-        private function shouldFetchEmployeesData($description)
+        private function shouldFetchEmployeeData($description)
         {
-        return true;
             $keywords = array(
                 "marketing",
                 "PR",
@@ -311,30 +309,54 @@
             }
         }
         
-        private function getEmployees($scrapperCompanyId, $finder)
+        private function getEmployees($scrapperCompanyId, $employeeType, $finder)
         {
             $query = "//*[contains(@class, 'section team')]";
-            $query .= "//*[(contains(@class, 'group')) and not (contains(@class, 'view_all'))]";
+            $query .= "//*[(contains(@class, 'group')) and preceding-sibling::h4[1][@data-tips_selector='".$employeeType."']]";
             
             $nodeElements = $finder->query($query);
             
             if ($nodeElements->length > 0) {
               $nodeElement = $nodeElements->item(0)->getElementsByTagName("a");
-            
               $i = 0;
               $countEmployees = 0;
               
               while ( ($i < $nodeElement->length)
                       && ($countEmployees <= $this::MAX_EMPLOYEES) ) {
                   $nodeValue = $nodeElement->item($i)->nodeValue;
-                  if ($nodeValue && (strpos($nodeValue, "@") === false) ) {
-                      $profileName = $nodeElement->item($i)->nodeValue;
-                      $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
-                      $this->getEmployeeProfile($profileLink,
-                                              $profileName,
-                                              $scrapperCompanyId);
+                  if ($nodeValue && (strpos($nodeValue, "@") === false) && (strpos($nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue, "https://angel.co/") === 0)) {                  
+                      $sibling = $nodeElement->item($i)->parentNode->nextSibling;
+                      $titleFound = false;
+                      $discard = true;
 
-                      $countEmployees++;
+                      while ((! $titleFound) && ($sibling !== null)) {
+                        if ($sibling->nodeType == 1) {
+                          $elementClass = $sibling->getAttribute('class');
+                          if ($elementClass == 'role_title') {
+                            $role = $sibling->nodeValue;
+                            $titleFound = true;
+                            if ($employeeType == 'advisors_section' || $this->shouldFetchEmployeeData($role)) {
+                              $profileName = $nodeElement->item($i)->nodeValue;
+                              $profileLink = $nodeElement->item($i)->attributes->getNamedItem("href")->nodeValue;
+                              if ($employeeType == 'advisors_section') {
+                                $title = 'Advisor';
+                              } else {
+                                $title = $role;
+                              }
+                              $discard = false;
+                            }
+                          }
+                        }
+                        $sibling = $sibling->nextSibling;
+                      }
+                      
+                      if (! $discard) {
+                          $this->getEmployeeProfile($profileLink,
+                                                  $profileName,
+                                                  $title,
+                                                  $scrapperCompanyId);
+                          $countEmployees++;
+                      }
                   }
                   $i++;
               }
@@ -370,6 +392,7 @@
         
         private function getEmployeeProfile($profileLink,
                                             $profileName,
+                                            $title,
                                             $companyId)
         {
             echo "\nEmployee Name: " . $profileName . "\n";
@@ -388,6 +411,7 @@
                     $employee->setCompanyId($companyId);
                     $employee->setFirstName($nameArray["first_name"]);
                     $employee->setLastName($nameArray["last_name"]);
+                    $employee->setTitle($title);
                     $employee->setSocial($social);
 
                     $employee->save();

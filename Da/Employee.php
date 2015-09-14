@@ -10,6 +10,7 @@
         public static function save($companyId,
                                     $firstName,
                                     $lastName,
+                                    $title,
                                     $social)
         {
             $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_WRITE");
@@ -19,15 +20,17 @@
                             company_id,
                             first_name,
                             last_name,
+                            title,
                             social
                         )
                     VALUES
-                        (?, ?, ?, ?);";
+                        (?, ?, ?, ?, ?);";
 
             $parameters = new Da\dbParameters();
             $parameters->addParameter("INT", $companyId);
             $parameters->addParameter("STRING", $firstName);
             $parameters->addParameter("STRING", $lastName);
+            $parameters->addParameter("STRING", $title);
             $parameters->addParameter("STRING", $social);
 
             $value = $dbConnection->execute($sql, $parameters);
@@ -39,7 +42,7 @@
             $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_READ");
 
             $sql = "SELECT
-                        id, company_id, first_name, last_name, social
+                        id, company_id, first_name, last_name, title, social
                     FROM
                         scrapper_employee
                     WHERE

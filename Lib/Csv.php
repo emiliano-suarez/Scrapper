@@ -88,6 +88,7 @@
             foreach($employees as $employee) {
                 $companyPlainInfo .= "\"" . $employee["FIRST_NAME"] . "\",";
                 $companyPlainInfo .= "\"" . $employee["LAST_NAME"] . "\",";
+                $companyPlainInfo .= "\"" . $employee["TITLE"] . "\",";
                 $companyPlainInfo .= "\"" . $employee["SOCIAL"] . "\",";
             }
             

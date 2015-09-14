@@ -8,6 +8,7 @@
         private $_companyId;
         private $_firstName;
         private $_lastName;
+        private $_title;
         private $_social;
 
         public function setCompanyId($companyId)
@@ -40,6 +41,16 @@
             return $this->_lastName;
         }
 
+        public function setTitle($title)
+        {
+            $this->_title = $title;
+        }
+        
+        public function getTitle()
+        {
+            return $this->_title;
+        }
+        
         public function setSocial($social)
         {
             $this->_social = $social;
@@ -60,9 +71,10 @@
             $companyId = $this->_companyId;
             $firstName = $this->_firstName ? $this->_firstName : "";
             $lastName = $this->_lastName ? $this->_lastName : "";
+            $title = $this->_title ? $this->_title : "";
             $social = $this->_social ? $this->_social : "";
 
             return Da\Da_Employee::save($companyId, $firstName,
-                                        $lastName, $social);
+                                        $lastName, $title, $social);
         }
     }

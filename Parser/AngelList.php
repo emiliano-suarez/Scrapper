@@ -28,12 +28,15 @@
                               "Internet",
                               "", // Needed to do not filter by this field
                           );
+        private $locations = null;
         private $_companyType = null;
 
         public function __construct($siteName = "")
         {
             $this->_siteName = $siteName;
             $this->_helper = new Lib\Lib_Helper();
+            require __DIR__."/../Config/AngelList.php";
+            $this->locations = $locations;
         }
 
         public function run()
@@ -46,51 +49,57 @@
             $url = "https://angel.co/company_filters/search_data";
             $headers = array('X-Requested-With: XMLHttpRequest');
 
-            foreach ($this->_types as $type) {
-                echo "Getting type: " . $type . "\n";
-                
-                foreach ($this->_stages as $stage) {
-                    echo "Getting stage: " . $stage . "\n";
+            foreach ($this->locations as $location) {
+                echo "Getting location: " . $location . "\n";
+                foreach ($this->_types as $type) {
+                    echo "Getting type: " . $type . "\n";
+                    
+                    foreach ($this->_stages as $stage) {
+                        echo "Getting stage: " . $stage . "\n";
 
-                    $companyCounter = 0;
-                    $pageNumber = 1;
-                
-                    do {
-                        echo "\nPage: " . $pageNumber . "\n";
+                        $companyCounter = 0;
+                        $pageNumber = 1;
+                    
+                        do {
+                            echo "\nPage: " . $pageNumber . "\n";
 
-                        $fields = "filter_data[stage]=" . $stage;
-                        $fields .= "&filter_data[company_types][]=" . $type;
-                        $fields .= "&sort=joined&page=" . $pageNumber;
+                            $fields = "filter_data[stage]=" . $stage;
+                            $fields .= "&filter_data[company_types][]=" . $type;
+                            if ($location != '') {
+                              $fields .= "&locations[]=" . $location;
+                            }
+                            $fields .= "&sort=joined&page=" . $pageNumber;
 
-                        $this->_companyType = "";
+                            $this->_companyType = "";
 
-                        if ($type) {
-                            $this->_companyType = $type;
-                        }
+                            if ($type) {
+                                $this->_companyType = $type;
+                            }
 
-                        $page = $this->_helper->getPage($url, $fields, $headers);
+                            $page = $this->_helper->getPage($url, $fields, $headers);
 
-                        if ($page) {
-                            $page = json_decode($page);
-                            
-                            if (isset($page->ids)) {
-                                foreach ($page->ids as $companyId) {
-                                    if ( ! $this->companyExists($companyId) ) {
-                                        $company = $this->getCompanyInfo($companyId);
-                                        sleep(2);
+                            if ($page) {
+                                $page = json_decode($page);
+                                
+                                if (isset($page->ids)) {
+                                    foreach ($page->ids as $companyId) {
+                                        if ( ! $this->companyExists($companyId) ) {
+                                            $company = $this->getCompanyInfo($companyId);
+                                            sleep(2);
+                                        }
+                                        $companyCounter++;
                                     }
-                                    $companyCounter++;
+                                }
+                                else {
+                                    echo "Warning: empty ids !!!\n";
                                 }
                             }
-                            else {
-                                echo "Warning: empty ids !!!\n";
-                            }
-                        }
-                        sleep(2);
+                            sleep(2);
 
-                        $pageNumber++;
+                            $pageNumber++;
+                        }
+                        while(isset($page->total) && $companyCounter < $page->total);
                     }
-                    while(isset($page->total) && $companyCounter < $page->total);
                 }
             }
         }

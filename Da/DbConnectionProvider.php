@@ -37,6 +37,8 @@
         public function __construct($mysqlConnection)
         {
             $this->dbConnection = $mysqlConnection;
+            $this->dbConnection->query("SET NAMES 'utf8'");
+            $this->dbConnection->query("SET CHARSET 'utf8'");
         }
 
         private function prepare($sql)

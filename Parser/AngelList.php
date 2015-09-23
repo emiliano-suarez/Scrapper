@@ -83,10 +83,8 @@
                                 
                                 if (isset($page->ids)) {
                                     foreach ($page->ids as $companyId) {
-                                        if ( ! $this->companyExists($companyId) ) {
-                                            $company = $this->getCompanyInfo($companyId);
-                                            sleep(2);
-                                        }
+                                        $company = $this->getCompanyInfo($companyId);
+                                        sleep(2);
                                         $companyCounter++;
                                     }
                                 }
@@ -113,43 +111,47 @@
                 $htmlPage = $this->_helper->getPage($companyUrl);
 
                 if ($htmlPage) {
-                    $company = new Models\Models_Company();
-
                     $finder = $this->getElementFinder($htmlPage);
+                    $domain = $this->getDomain($finder);
+                    
+                    if ( ! $this->companyExists($companyId, $domain) ) {
+                
+                      $company = new Models\Models_Company();
 
-                    if ($finder) {
-                        $name = $this->getName($finder);
-                        $markets = $this->getMarkets($finder);
-                        $location = $this->getLocation($finder);
-                        $domain = $this->getDomain($finder);
-                        $social = $this->getSocial($finder);
-                        $description = $this->getDescription($finder);
-                        $siteCompanyId = $this->generateSiteCompanyId($companyId);
+                      if ($finder) {
+                          $name = $this->getName($finder);
+                          $markets = $this->getMarkets($finder);
+                          $location = $this->getLocation($finder);
+                          $domain = $this->getDomain($finder);
+                          $social = $this->getSocial($finder);
+                          $description = $this->getDescription($finder);
+                          $siteCompanyId = $this->generateSiteCompanyId($companyId);
 
-                        echo "Company: " . $name . "\n";
-                        
-                        $company->setSiteName($this->_siteName);
-                        $company->setSiteCompanyId($siteCompanyId);
-                        $company->setName($name);
-                        $company->setType($this->_companyType);
-                        $company->setMarkets($markets);
-                        $company->setLocation($location);
-                        $company->setDomain($domain);
-                        $company->setSocial($social);
-                        $company->setDescription($description);
-                        
-                        $scrapperCompanyId = $company->save();
+                          echo "Company: " . $name . "\n";
+                          
+                          $company->setSiteName($this->_siteName);
+                          $company->setSiteCompanyId($siteCompanyId);
+                          $company->setName($name);
+                          $company->setType($this->_companyType);
+                          $company->setMarkets($markets);
+                          $company->setLocation($location);
+                          $company->setDomain($domain);
+                          $company->setSocial($social);
+                          $company->setDescription($description);
+                          
+                          $scrapperCompanyId = $company->save();
 
-                        $this->getFounders($scrapperCompanyId, $finder);
-                        
-                        $this->getEmployees($scrapperCompanyId, 'employees_section', $finder);
-                        $this->getEmployees($scrapperCompanyId, 'advisors_section', $finder);
+                          $this->getFounders($scrapperCompanyId, $finder);
+                          
+                          $this->getEmployees($scrapperCompanyId, 'employees_section', $finder);
+                          $this->getEmployees($scrapperCompanyId, 'advisors_section', $finder);
 
-                        return $company;
-                    }
-                    else {
-                        echo "Fail to get page '$companyUrl'\n";
-                    }
+                          return $company;
+                      }
+                      else {
+                          echo "Fail to get page '$companyUrl'\n";
+                      }
+                  }
                 }
             }
             return false;
@@ -264,11 +266,17 @@
             return $this->_siteName . "_" . $companyId;
         }
 
-        private function companyExists($companyId)
+        private function companyExists($companyId, $domain)
         {
             $company = new Models\Models_Company();
             $siteCompanyId = $this->generateSiteCompanyId($companyId);
-            return $company->getBySiteCompanyId($siteCompanyId);
+            $companyData = $company->getBySiteCompanyId($siteCompanyId);
+            if (! $companyData) {
+              return $companyData;
+            } else {
+              $companyData = $company->getByDomain($domain);
+              return $companyData;
+            }
         }
 
         private function shouldFetchEmployeeData($description)

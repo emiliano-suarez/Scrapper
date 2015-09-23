@@ -110,4 +110,24 @@
 
             return $value;
         }
+        
+        public static function getByDomain($domain)
+        {
+            $dbConnection = Da\Da_DbConnectionProvider::getConnection("SITE_READ");
+
+            $sql = "SELECT
+                        id, site_name, site_company_id, name, type,
+                        markets, location, domain, social, description
+                    FROM
+                        scrapper_company
+                    WHERE
+                        domain = ? ";
+
+            $parameters = new Da\dbParameters();
+            $parameters->addParameter("STRING", $domain);
+
+            $value = $dbConnection->executeQuery($sql, $parameters);
+
+            return $value;
+        }
     }

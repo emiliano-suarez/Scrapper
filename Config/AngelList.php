@@ -2,15 +2,6 @@
 $locations = array(
   'New York City',
   'Los Angeles',
-  'United Kingdom',
-  'United States',
-  'Canada',
-);
-
-/*
-$locations = array(
-  'New York City',
-  'Los Angeles',
   'Chicago',
   'Houston',
   'Philadelphia',
@@ -479,5 +470,5 @@ $locations = array(
   'North Vancouver',
   'Canada',
   ''
-);*/
+);
 

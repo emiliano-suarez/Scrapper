@@ -10,6 +10,14 @@
                 ),
                 'enabled' => true,
             ),
+            'Gust' => array(
+                'name' => 'Gust',
+                'ParserClass' => 'Parser_Gust',
+                'setup' => array(
+                    'secondsBetweenRequests' => 5,
+                ),
+                'enabled' => true,
+            ),
             'Dummy' => array(
                 'name' => 'Dummy',
                 'ParserClass' => 'Parser_Common',

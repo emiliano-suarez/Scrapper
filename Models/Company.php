@@ -114,6 +114,11 @@
         {
             return Da\Da_Company::getBySiteName($siteName);
         }
+
+        public function getByDomain($domain)
+        {
+            return Da\Da_Company::getByDomain($domain);
+        }
         
         public function save()
         {

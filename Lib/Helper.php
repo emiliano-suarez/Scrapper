@@ -56,8 +56,13 @@
             curl_close($ch);
 
             if (( ! $validResponse) && ($retries == $this::MAX_CURL_RETRIES)) {
-                echo "Cannot load url: {$url}, with fields ({$fields_string})\n";
-                return false;
+                $body = $this->cmdCurl($url, $fields, $headers);
+                if ($body === null) {
+                  echo "Cannot load url: {$url}, with fields ({$fields_string})\n";
+                  return false;
+                } else {
+                  return $body;
+                }
             }
             else {
                 $body = substr($response, $headerSize);
@@ -65,6 +70,11 @@
             }
         }
 
+        public function cmdCurl($url, $fields, $headers = array()) {
+          //TODO: Complete things regarding sending fields and headers
+          return shell_exec('curl '.$url);
+        }
+        
         public function write($filename, $txt)
         {
             $file = fopen($filename, "a+") or die("Unable to open file!");

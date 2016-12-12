@@ -1,0 +1,1 @@
+ALTER TABLE scrapper_company MODIFY COlUMN site_company_id VARCHAR(50) DEFAULT NULL;

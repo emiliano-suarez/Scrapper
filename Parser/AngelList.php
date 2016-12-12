@@ -122,7 +122,6 @@
                           $name = $this->getName($finder);
                           $markets = $this->getMarkets($finder);
                           $location = $this->getLocation($finder);
-                          $domain = $this->getDomain($finder);
                           $social = $this->getSocial($finder);
                           $description = $this->getDescription($finder);
                           $siteCompanyId = $this->generateSiteCompanyId($companyId);
@@ -190,18 +189,17 @@
 
         private function getLocation($finder)
         {
-            $classname = "main standard g-lockup larger";
-            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'tag')]";
+            $classname = "js-location_tag_holder";
+            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'js-location_tags')]/a";
             $nodes = $finder->query($query);
-            $location = split(" · ", $nodes->item(0)->nodeValue)[0];
-            $location = preg_replace( "/\n/", "", $location);
+            $location = $nodes->item(0)->nodeValue;
             return $location;
         }
 
         private function getDomain($finder)
         {
-            $classname = "links standard";
-            $query = "//*[contains(@class, '$classname')]//*[contains(@class, 'company_url')]";
+            $classname = "tags_and_links _a";
+            $query = "//*[contains(@class, '$classname')]//span[contains(@class, 'links')]//*[contains(@class, 'company_url')]";
             $nodes = $finder->query($query);
             $domain = $nodes->item(0)->attributes->getNamedItem("href")->nodeValue;
             return $domain;
@@ -209,15 +207,15 @@
 
         private function getSocial($finder)
         {
-            $classname = "links standard";
-            $query = "//*[contains(@class, '$classname')]//*[(contains(@class, 'link')) and not (contains(@class, 'blank'))]//*[contains(@class, '_url')]";
+            $classname = "tags_and_links _a";
+            $query = "//*[contains(@class, '$classname')]//span[contains(@class, 'links')]//*[(contains(@class, 'link')) and not (contains(@class, 'blank'))]//*[contains(@class, '_url')]";
             $nodes = $finder->query($query);
 
             $socialArray = array();
             for ($i = 0; $i < $nodes->length; $i++) {
                 // Don't concatenate 'company_url'
-                if ("company_url" != $nodes->item($i)->attributes->getNamedItem("class")->nodeValue) {
-                    $socialArray[] = $nodes->item($i)->attributes->getNamedItem("href")->nodeValue;
+                if (strpos($nodes->item($i)->attributes->getNamedItem("class")->nodeValue, "company_url") === false ) {
+                  $socialArray[] = $nodes->item($i)->attributes->getNamedItem("href")->nodeValue;
                 }
             }
 
@@ -439,7 +437,7 @@
         private function getProfileSocialInfo($finder)
         {
             $classname = "darkest";
-            $query = "//*[contains(@class, '$classname')]//*[(contains(@class, 'link'))]";
+            $query = "//*[contains(@class, '$classname')]//*[(contains(@class, 'link'))]/a";
             $nodes = $finder->query($query);
 
             $socialArray = array();

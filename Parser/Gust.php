@@ -6,13 +6,8 @@ use Scrapper\Models as Models;
 
 class Parser_Gust implements Parser_Interface {
 
-    const MAX_FOUNDERS = 5;
-    const MAX_EMPLOYEES = 10;
-    
     private $_siteName;
-    private $_config = null;
     private $_helper;
-    private $_companyList = array();
 
     public function __construct($siteName = "")
     {
@@ -27,7 +22,7 @@ class Parser_Gust implements Parser_Interface {
 
     private function getCompanies()
     {
-        $url = "https://gust.com/search/new?category=everything&partial=results";
+        $url = "https://gust.com/search/new?category=startups&partial=results";
         $headers = array('X-Requested-With: XMLHttpRequest');
 
         $pageNumber = 1;
@@ -47,7 +42,7 @@ class Parser_Gust implements Parser_Interface {
                 $page = '<body>'.$page.'</body>';
                 $finder = $this->_getElementFinder($page);
                 
-                $query = '//li[@class="list-group-item clearfix"]';
+                $query = '//li[@class="list-group-item"]';
                 $companies = $finder->query($query);
                 $counter = 0;
                 while ($counter < $companies->length) {
@@ -84,7 +79,7 @@ class Parser_Gust implements Parser_Interface {
     
     private function _processCompany($finder, $companyNode)
     {
-        $companyLinkQuery = './/div[@class="media-body"]/h3/a';
+        $companyLinkQuery = './/div[@class="card-body"]/div[@class="card-title"]/a';
         $nodes = $finder->query($companyLinkQuery, $companyNode);
         $name = $nodes->item(0)->nodeValue;
         $link = 'https://gust.com/'.$nodes->item(0)->getAttribute('href');
@@ -92,24 +87,21 @@ class Parser_Gust implements Parser_Interface {
 
         echo "Parsing company ".$name.' ('.$companyId.')'.PHP_EOL;
 
-        $typeQuery = './/div[@class="col-md-2"]/small[contains(@class, "text-muted")]';
-        $nodes = $finder->query($typeQuery, $companyNode);
-        $type = str_replace(PHP_EOL, '', $nodes->item(0)->nodeValue);
+        $type = 'Company';
 
-        $locationQuery = './/div[@class="text--secondary"]';
+        $locationQuery = './/div[@class="card-secondary-subtitle"]';
         $nodes = $finder->query($locationQuery, $companyNode);
         $parts = explode(PHP_EOL, $nodes->item(0)->nodeValue);
-        $location = $parts[1];
+        $location = $parts[0];
         $industry = $parts[2];
         
-        $descriptionQuery = './/small[@role="description"]';
+        $descriptionQuery = './/dvi[@class="card-content"]/p[@role="description"]';
         $nodes = $finder->query($descriptionQuery, $companyNode);
-        $description = $nodes->item(0)->nodeValue;
+        $description = trim($nodes->item(0)->nodeValue);
         
         sleep(15);
         $headers = array('X-Requested-With: XMLHttpRequest');
         $page = $this->_helper->getPage($link, null, $headers);
-      
         $company = $this->_buildCompanyInfo($page, $companyId, $type, $location, $industry, $description, $name);
     }
 
@@ -157,27 +149,14 @@ class Parser_Gust implements Parser_Interface {
       while ($counter < $managerNodes->length) {
         $node = $managerNodes->item($counter);
         
-        $positionQuery = './/div[@class="media media--social-contact-card"]//div[@class="media-heading__role"]';
+        $positionQuery = './/div[@class="card card-rounded card-small"]//div[@class="card-subtitle"]';
         $positionNode = $finder->query($positionQuery, $node);
         $position = $positionNode->item(0)->nodeValue;
         if ($this->_shouldFetchEmployeeData($position)) {
-          $nameQuery = './/div[@class="media media--social-contact-card"]//div[@class="media-heading__name"]';
+          $nameQuery = './/div[@class="card-body"]//div[@class="card-title"]';
           $nameNode = $finder->query($nameQuery, $node);
-          $name = str_replace(PHP_EOL, '', $nameNode->item(0)->nodeValue);
+          $name = trim(str_replace(PHP_EOL, '', $nameNode->item(0)->nodeValue));
 
-          echo '    Getting info for '.$name.PHP_EOL;
-          
-          $socialQuery = './/div[@class="media media--social-contact-card"]//div[@class="media-heading"]/a';
-          $socialLinks = $finder->query($socialQuery, $node);
-          $i = 0;
-          $socialLinks = array();
-          while ($i < $socialLinks->length) {
-            $socialLinks[] = $socialLinks->item($i)->getAttribute('href');
-            $i++;
-          }
-          $social = implode(',', $socialLinks);
-          $social = str_replace(PHP_EOL, '', $social);
-          
           if ($this->_isFounder($position)) {
             $employee = new Models\Models_Founder();
           } else {
@@ -189,7 +168,7 @@ class Parser_Gust implements Parser_Interface {
           $nameParts = explode(' ', $name);
           $employee->setFirstName($nameParts[0]);
           $employee->setLastName($nameParts[count($nameParts) - 1]);
-          $employee->setSocial($social);
+          //$employee->setSocial($social); //No social info anylonger, at least not publicly visible in Gust
           
           $employee->save();
         }
@@ -201,7 +180,7 @@ class Parser_Gust implements Parser_Interface {
     private function _getAdvisors($finder, $companyId) {
       echo '  Extracting Advisors ...'.PHP_EOL;
     
-      $advisorsQuery = '//div[@class="gust-margin--extra-small--bottom" and @id="advisors"]//div[@class="panel-body"]/ul/li//div[@class="media media--contact-card"]';
+      $advisorsQuery = '//div[@class="gust-margin--extra-small--bottom" and @id="advisors"]//div[@class="panel-body"]/ul/li//div[@class="card card-rounded card-small"]';
       $advisorNodes = $finder->query($advisorsQuery);
       
       $title = 'Advisor';
@@ -209,7 +188,7 @@ class Parser_Gust implements Parser_Interface {
       while ($counter < $advisorNodes->length) {
         $node = $advisorNodes->item($counter);
 
-        $nameQuery = './/div[@class="media-heading__name"]';
+        $nameQuery = './/div[@class="card-title"]';
         $nameNode = $finder->query($nameQuery, $node);
         $name = str_replace(PHP_EOL, '', $nameNode->item(0)->nodeValue);
          
@@ -240,6 +219,7 @@ class Parser_Gust implements Parser_Interface {
             "co-founder",
             "cofounder",
             "founder",
+            ""
         );
 
         foreach ($keywords as $keyword) {

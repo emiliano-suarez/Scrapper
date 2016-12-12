@@ -22,7 +22,7 @@
 
         public function get($key)
         {
-            $elements = split('\.', $key);
+            $elements = explode('\.', $key);
             $value = $this->_data;
             foreach ($elements as $element) {
                 if (isset($value[$element])) {
